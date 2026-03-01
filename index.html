@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>David Foresi — Resume</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Courier+Prime:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+  <style>
+    /* ─── TOKENS ─────────────────────────────────────── */
+    :root {
+      --bg:          #0e0a05;
+      --surface:     #19130a;
+      --surface-2:   #0a0d08;
+      --accent:      #f47003;
+      --accent-dim:  rgba(244,112,3,0.12);
+      --accent-glow: rgba(244,112,3,0.35);
+      --text:        #e5d9c1;
+      --muted:       #a09078;
+      --dim:         #7a6450;
+      --rule:        #271e10;
+      --rule-mid:    #42300f;
+      --prose:       #c8b89a;
+    }
+
+    /* ─── RESET ──────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Courier Prime', monospace;
+      font-size: 16px;
+      line-height: 1.85;
+      overflow-x: hidden;
+    }
+
+    /* ─── GRAIN ──────────────────────────────────────── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: radial-gradient(circle, rgba(255,255,255,0.016) 1px, transparent 1px);
+      background-size: 3px 3px;
+      pointer-events: none;
+      z-index: 1000;
+    }
+
+    /* ─── SCANLINES ──────────────────────────────────── */
+    body::after {
+      content: '';
+      position: fixed; inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 3px,
+        rgba(0,0,0,0.04) 3px, rgba(0,0,0,0.04) 4px
+      );
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    /* ─── VIGNETTE ───────────────────────────────────── */
+    .vignette {
+      position: fixed; inset: 0;
+      background: radial-gradient(ellipse at 50% 40%, transparent 35%, rgba(0,0,0,0.6) 100%);
+      pointer-events: none;
+      z-index: 998;
+    }
+
+    /* ─── NAV ────────────────────────────────────────── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0;
+      z-index: 200;
+      padding: 0.85rem 3rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(14,10,5,0.9);
+      backdrop-filter: blur(6px);
+      border-bottom: 1px solid var(--rule-mid);
+    }
+
+    .nav-brand{
+      font-family: 'Rajdhani', sans-serif;  /* or Teko, etc. */
+      font-size: 1.3rem;
+      letter-spacing: 0.1em;
+
+      color: var(--accent);
+      text-shadow: 0 0 18px var(--accent-glow);
+    }
+
+    nav ul {
+      list-style: none;
+      display: flex;
+      gap: 2.25rem;
+    }
+
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.68rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+
+    nav a:hover { color: var(--accent); }
+
+    /* ─── HERO ───────────────────────────────────────── */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 8rem 3rem 4rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-topline {
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(to right, transparent, var(--accent) 30%, var(--accent) 70%, transparent);
+      box-shadow: 0 0 14px var(--accent-glow);
+    }
+
+    .hero-watermark {
+      position: absolute;
+      bottom: -1rem; left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: clamp(5rem, 18vw, 20rem);
+      color: transparent;
+      -webkit-text-stroke: 1px rgba(244,112,3,0.045);
+      white-space: nowrap;
+      user-select: none;
+      pointer-events: none;
+      letter-spacing: 0.03em;
+      line-height: 1;
+    }
+
+    .eyebrow {
+      font-size: 0.65rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+    }
+
+    .eyebrow::before, .eyebrow::after {
+      content: '';
+      display: block;
+      height: 1px;
+      width: 2.5rem;
+      background: var(--accent);
+      opacity: 0.5;
+    }
+
+    /* ─── TERMINAL BOX ───────────────────────────────── */
+    .terminal-box {
+      background: #070905;
+      border: 1px solid var(--rule-mid);
+      border-radius: 8px;
+      max-width: 560px;
+      margin-bottom: 1.75rem;
+      overflow: hidden;
+      box-shadow: 0 0 0 1px rgba(244,112,3,0.06), 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    .term-chrome {
+      background: #12100a;
+      border-bottom: 1px solid var(--rule);
+      padding: 0.55rem 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+
+    .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .dot-r { background: #ff5f57; }
+    .dot-y { background: #ffbd2e; }
+    .dot-g { background: #28c840; }
+
+    .term-title {
+      margin: 0 auto;
+      font-size: 0.62rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      opacity: 0.6;
+    }
+
+    .term-body { padding: 1.25rem 1.5rem 1.5rem; }
+
+    .term-path {
+      font-size: 0.7rem;
+      color: var(--muted);
+      opacity: 0.55;
+      margin-bottom: 0.5rem;
+    }
+
+    /* name line — font-size set HERE so em units work for both children */
+    .term-name-line {
+      display: flex;
+      align-items: flex-end;
+      font-size: 2.2rem;
+      line-height: 1;
+    }
+
+    .term-prompt-char {
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.75em;
+      color: var(--accent);
+      opacity: 0.7;
+      margin-right: 0.25em;
+      padding-bottom: 0.04em;
+    }
+
+    .typed-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1em;
+      color: var(--text);
+      letter-spacing: 0.02em;
+    }
+
+    /* block cursor: slim vertical rectangle, cap-height tall, baseline-aligned */
+    .typed-cursor {
+      display: block;
+      width: 0.13em;      /* narrow rectangle — roughly 2–3px at this size */
+      height: 0.72em;     /* Bebas Neue cap height ≈ 0.72em */
+      background: var(--accent);
+      margin-left: 4px;
+      margin-bottom: 0.19em; /* Bebas Neue descender metric offset — lifts cursor to baseline */
+      flex-shrink: 0;
+      box-shadow: 0 0 8px var(--accent-glow);
+      animation: blink 1s step-end infinite;
+    }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* ─── VIEW TOGGLE ────────────────────────────────── */
+    .view-toggle {
+      display: flex;
+      gap: 0;
+      margin-bottom: 2.5rem;
+      max-width: 560px;
+    }
+
+    .vtbtn {
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 0.55rem 1.4rem;
+      border: 1px solid var(--rule-mid);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      text-decoration: none;
+      transition: color 0.2s, border-color 0.2s, background 0.2s;
+    }
+
+    .vtbtn:first-child { border-radius: 3px 0 0 3px; border-right: none; }
+    .vtbtn:last-child  { border-radius: 0 3px 3px 0; }
+
+    .vtbtn.active {
+      background: var(--accent-dim);
+      border-color: rgba(244,112,3,0.45);
+      color: var(--accent);
+    }
+
+    .vtbtn:hover:not(.active) { color: var(--text); border-color: var(--dim); }
+
+    /* ─── HERO HUMAN CONTENT ─────────────────────────── */
+    .hero-human { }
+
+    .roles {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.6rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .badge {
+      font-size: 0.62rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      padding: 0.3rem 0.8rem;
+      border: 1px solid var(--rule-mid);
+      color: var(--muted);
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.22s;
+    }
+
+    .badge:hover { border-color: var(--accent); color: var(--accent); }
+
+    .badge.hot {
+      border-color: rgba(244,112,3,0.45);
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    /* ─── SECTION NAV BUTTONS ────────────────────────── */
+    .sec-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .sec-btn {
+      font-family: 'Courier Prime', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      text-decoration: none;
+      color: var(--dim);
+      padding: 0.3rem 0.8rem;
+      border: 1px dashed var(--rule-mid);
+      transition: color 0.2s, border-color 0.2s, border-style 0.2s, background 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4em;
+    }
+
+    .sec-btn:hover {
+      color: var(--accent);
+      border-color: rgba(244,112,3,0.4);
+      border-style: solid;
+      background: var(--accent-dim);
+    }
+
+    .sec-btn .sec-num {
+      color: var(--accent);
+      opacity: 0.5;
+      font-size: 0.9em;
+    }
+
+    .hero-divider {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .hero-divider .ln { flex:1; max-width:6rem; height:1px; background:linear-gradient(to right, var(--accent), transparent); opacity:0.5; }
+    .hero-divider .gem { color: var(--accent); font-size:0.55rem; letter-spacing:0.2em; opacity:0.7; }
+
+    .hero-bio {
+      max-width: 54ch;
+      font-size: 0.95rem;
+      color: var(--prose);
+      font-style: italic;
+      line-height: 2;
+    }
+
+    .scroll-cue {
+      position: absolute;
+      bottom: 2.5rem; left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+    }
+
+    .scroll-cue span {
+      display: block;
+      font-size: 0.6rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--dim);
+      margin-bottom: 0.4rem;
+    }
+
+    .scroll-cue .arr { color: var(--accent); font-size: 1rem; animation: bob 1.6s ease-in-out infinite; }
+    @keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(7px)} }
+
+    .loading-msg { color: var(--muted); font-style: italic; padding: 1rem 0; }
+
+    /* ─── SECTION WRAPPER ─────────────────────────────── */
+    .wrap {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 6rem 3rem;
+    }
+
+    .section-label {
+      font-size: 0.62rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.9rem;
+    }
+
+    .section-label::after {
+      content: '';
+      display: block;
+      height: 1px;
+      background: var(--rule-mid);
+      flex: 1;
+    }
+
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 4vw, 3.25rem);
+      font-weight: 700;
+      line-height: 1.18;
+      color: var(--text);
+      margin-bottom: 4rem;
+    }
+
+    .section-title em { color: var(--accent); font-style: italic; }
+
+    /* ─── ORNAMENTAL RULE ─────────────────────────────── */
+    .orn-rule {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 0 3rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .orn-rule .ln { flex:1; height:1px; background: var(--rule-mid); }
+    .orn-rule .txt {
+      font-size: 0.6rem;
+      letter-spacing: 0.4em;
+      color: var(--accent);
+      opacity: 0.5;
+    }
+
+    /* ─── TIMELINE ────────────────────────────────────── */
+    .timeline {
+      position: relative;
+      padding-left: 2.75rem;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0.6rem; bottom: 0;
+      width: 1px;
+      background: linear-gradient(to bottom, var(--accent) 0%, transparent 88%);
+      opacity: 0.3;
+    }
+
+    .te {
+      position: relative;
+      margin-bottom: 3.75rem;
+      padding-bottom: 3.75rem;
+      border-bottom: 1px solid var(--rule);
+      opacity: 0;
+      transform: translateY(22px);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+
+    .te.vis { opacity:1; transform:translateY(0); }
+    .te:last-child { border-bottom: none; margin-bottom:0; padding-bottom:0; }
+
+    .te-node {
+      position: absolute;
+      left: -2.75rem; top: 0.55rem;
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 3px rgba(244,112,3,0.1), 0 0 14px var(--accent-glow);
+      transform: translateX(-4px);
+    }
+
+    .te-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 0.75rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .te-dates {
+      font-size: 0.62rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-dim);
+      border: 1px solid rgba(244,112,3,0.28);
+      padding: 0.18rem 0.55rem;
+    }
+
+    .te-co {
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .te-loc {
+      margin-left: auto;
+      font-size: 0.62rem;
+      color: var(--dim);
+    }
+
+    .te h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.45rem;
+      font-weight: 600;
+      color: var(--text);
+      line-height: 1.28;
+      margin-bottom: 0.9rem;
+    }
+
+    .te p {
+      font-size: 0.88rem;
+      color: var(--prose);
+      line-height: 1.95;
+      max-width: 72ch;
+    }
+
+    /* ─── SKILLS GRID ─────────────────────────────────── */
+    .skills-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 3rem 3.5rem;
+    }
+
+    .sb {
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    .sb.vis { opacity:1; transform:translateY(0); }
+
+    .sb h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      color: var(--accent);
+      padding-bottom: 0.7rem;
+      border-bottom: 1px solid var(--rule-mid);
+      margin-bottom: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .sb h3::before { content: '◆'; font-size:0.45rem; opacity:0.65; }
+
+    .sb p { font-size: 0.875rem; color: var(--prose); line-height: 1.95; }
+
+    .tags { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-top: 1.1rem; }
+
+    .tag {
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.22rem 0.6rem;
+      border: 1px solid var(--rule-mid);
+      color: var(--dim);
+      font-family: 'Courier Prime', monospace;
+      transition: all 0.2s;
+    }
+
+    .tag:hover { border-color: rgba(244,112,3,0.4); color: var(--muted); }
+    .tag.hi { border-color: rgba(244,112,3,0.35); color: var(--muted); }
+
+    /* ─── EDUCATION ───────────────────────────────────── */
+    .edu-card {
+      display: flex;
+      gap: 2rem;
+      align-items: flex-start;
+      padding: 2rem 2rem 2rem 2.5rem;
+      background: var(--surface);
+      border: 1px solid var(--rule-mid);
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    .edu-card.vis { opacity:1; transform:translateY(0); }
+
+    .edu-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    .edu-year {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.75rem;
+      color: var(--accent);
+      opacity: 0.28;
+      line-height: 1;
+      white-space: nowrap;
+      min-width: 5rem;
+    }
+
+    .edu-body h3 { font-family: 'Playfair Display', serif; font-size: 1.15rem; color: var(--text); margin-bottom: 0.25rem; }
+    .edu-body .inst { font-size: 0.78rem; color: var(--muted); letter-spacing: 0.05em; }
+    .edu-body .note { margin-top: 0.75rem; font-size: 0.82rem; font-style: italic; color: var(--prose); line-height: 1.75; }
+
+    /* ─── FOOTER ──────────────────────────────────────── */
+    .site-footer {
+      border-top: 1px solid var(--rule-mid);
+      padding: 2rem 3rem;
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .site-footer p { font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); }
+    .footer-mark { font-family: 'Bebas Neue', sans-serif; font-size: 1.1rem; color: var(--accent); opacity: 0.4; }
+
+    /* ─── RESPONSIVE ──────────────────────────────────── */
+    @media (max-width: 780px) {
+      nav { padding: 0.85rem 1.5rem; }
+      nav ul { display: none; }
+      .hero { padding: 7rem 1.5rem 4rem; }
+      .wrap { padding: 4.5rem 1.5rem; }
+      .orn-rule { padding: 0 1.5rem; }
+      .skills-grid { grid-template-columns: 1fr; gap: 2.25rem; }
+      .timeline { padding-left: 1.75rem; }
+      .te-node { left: -1.75rem; }
+      .te-loc { margin-left: 0; width: 100%; }
+      .edu-card { flex-direction: column; gap: 0.5rem; }
+      .edu-year { font-size: 2rem; }
+      .site-footer { padding: 2rem 1.5rem; justify-content: center; text-align: center; }
+      #ai-view { padding: 0 1.5rem 3rem; }
+      .json-pre { font-size: 0.72rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="vignette"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-brand">dpforesi</div>
+  <ul>
+    <li><a href="#experience">Experience</a></li>
+    <li><a href="#skills">Skills</a></li>
+    <li><a href="#education">Education</a></li>
+  </ul>
+</nav>
+
+<!-- ─── HERO ──────────────────────────────────────────── -->
+<header class="hero">
+  <div class="hero-topline"></div>
+  <div class="hero-watermark">FORESI</div>
+
+  <div class="eyebrow"><span>Resume</span></div>
+
+  <!-- TERMINAL BOX -->
+  <div class="terminal-box">
+    <div class="term-chrome">
+      <div class="dot dot-r"></div>
+      <div class="dot dot-y"></div>
+      <div class="dot dot-g"></div>
+      <div class="term-title">resume.sh — bash</div>
+    </div>
+    <div class="term-body">
+      <div class="term-path">david@foresi:~$ ./resume.sh --name</div>
+      <div class="term-name-line">
+        <span class="term-prompt-char">›</span>
+        <span class="typed-name" id="typed-name"></span>
+        <span class="typed-cursor" id="typed-cursor"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW TOGGLE -->
+  <div class="view-toggle">
+    <span class="vtbtn active">◉ For Humans</span>
+    <a class="vtbtn" href="resume.json" target="_blank">{ } For AI</a>
+  </div>
+
+  <!-- HUMAN-ONLY HERO CONTENT -->
+  <div class="hero-human">
+    <div class="roles">
+      <a class="badge hot" href="#experience">AI Evaluator &amp; Annotator</a>
+      <a class="badge" href="#skills">Python Developer</a>
+      <a class="badge" href="#experience">Realtor · NV &amp; MX</a>
+      <a class="badge" href="#experience">Travel Agency Owner</a>
+    </div>
+
+    <div class="sec-nav">
+      <a class="sec-btn" href="#experience"><span class="sec-num">01</span> Experience</a>
+      <a class="sec-btn" href="#skills"><span class="sec-num">02</span> Skills</a>
+      <a class="sec-btn" href="#education"><span class="sec-num">03</span> Education</a>
+    </div>
+
+    <div class="hero-divider">
+      <div class="ln"></div>
+      <div class="gem">◆ &nbsp; ◆ &nbsp; ◆</div>
+    </div>
+
+    <p class="hero-bio">
+      A self-directed professional spanning real estate, travel, technology, and AI —
+      defined not by a single industry, but by a consistent thread of curiosity,
+      analytical rigor, and the willingness to build new skills entirely from scratch.
+    </p>
+  </div>
+
+  <div class="scroll-cue">
+    <span>Scroll</span>
+    <div class="arr">↓</div>
+  </div>
+</header>
+
+<!-- ─── HUMAN MAIN ────────────────────────────────────── -->
+<main id="human-main">
+
+  <!-- EXPERIENCE -->
+  <section id="experience">
+  <div class="wrap">
+    <div class="section-label">01 &nbsp;&#8202; Work Experience</div>
+    <h2 class="section-title">A Career Defined<br>by <em>Reinvention</em></h2>
+
+        <div class="timeline" id="timeline"></div>
+  </div>
+  </section>
+
+  <div class="orn-rule">
+    <div class="ln"></div>
+    <div class="txt">◆ &nbsp; — &nbsp; ◆ &nbsp; — &nbsp; ◆</div>
+    <div class="ln"></div>
+  </div>
+
+  <!-- SKILLS -->
+  <section id="skills">
+  <div class="wrap">
+    <div class="section-label">02 &nbsp;&#8202; Skills &amp; Expertise</div>
+    <h2 class="section-title">Built by Doing,<br>Refined by <em>Practice</em></h2>
+
+        <div class="skills-grid" id="skills-grid"></div>
+  </div>
+  </section>
+
+  <div class="orn-rule">
+    <div class="ln"></div>
+    <div class="txt">◆ &nbsp; — &nbsp; ◆ &nbsp; — &nbsp; ◆</div>
+    <div class="ln"></div>
+  </div>
+
+  <!-- EDUCATION -->
+  <section id="education">
+  <div class="wrap">
+    <div class="section-label">03 &nbsp;&#8202; Education</div>
+    <h2 class="section-title">Formal Foundations,<br><em>Lifelong</em> Learning</h2>
+
+        <div id="education-list"></div>
+
+  </div>
+  </section>
+
+  <footer class="site-footer">
+    <p>© 2026 David Foresi</p>
+    <div class="footer-mark">D. F.</div>
+    <p>Las Vegas, NV &nbsp;·&nbsp; Cabo San Lucas, MX</p>
+  </footer>
+
+</main>
+
+<script>
+  /* ── typing animation ─────────────────────────────── */
+  (function () {
+    const el = document.getElementById('typed-name');
+    const name = 'David Foresi';
+    let i = 0;
+    function type() {
+      if (i < name.length) { el.textContent += name[i++]; setTimeout(type, 75 + Math.random() * 55); }
+    }
+    setTimeout(type, 900);
+  })();
+
+  /* ── watermark parallax ───────────────────────────── */
+  const wm = document.querySelector('.hero-watermark');
+  if (wm) window.addEventListener('scroll', () => {
+    wm.style.transform = `translateX(-50%) translateY(${window.scrollY * 0.15}px)`;
+  }, { passive: true });
+
+  /* ── escape helper for innerHTML ─────────────────── */
+  function esc(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  /* ── scroll fade-in (called after render) ─────────── */
+  function initFade() {
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          setTimeout(() => e.target.classList.add('vis'), +e.target.dataset.delay || 0);
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.te').forEach((el, i)  => { el.dataset.delay = (i % 2) * 80; io.observe(el); });
+    document.querySelectorAll('.sb').forEach((el, i)  => { el.dataset.delay = i * 100;      io.observe(el); });
+    document.querySelectorAll('.edu-card').forEach((el, i) => { el.dataset.delay = i * 120; io.observe(el); });
+  }
+
+  /* ── renderers ────────────────────────────────────── */
+  function renderExperience(entries) {
+    document.getElementById('timeline').innerHTML = entries.map(e => `
+      <div class="te">
+        <div class="te-node"></div>
+        <div class="te-meta">
+          <span class="te-dates">${esc(e.dates_display)}</span>
+          <span class="te-co">${esc(e.organization)}</span>
+          <span class="te-loc">${esc(e.location)}</span>
+        </div>
+        <h3>${esc(e.title)}</h3>
+        <p>${esc(e.narrative)}</p>
+      </div>`).join('');
+  }
+
+  function renderSkills(blocks) {
+    document.getElementById('skills-grid').innerHTML = blocks.map(s => `
+      <div class="sb">
+        <h3>${esc(s.heading)}</h3>
+        <p>${esc(s.narrative)}</p>
+        <div class="tags">
+          ${s.tags.map(t => `<span class="tag${s.highlighted.includes(t) ? ' hi' : ''}">${esc(t)}</span>`).join('')}
+        </div>
+      </div>`).join('');
+  }
+
+  function renderEducation(entries) {
+    document.getElementById('education-list').innerHTML = entries.map(e => {
+      const inst = [e.institution, e.location, e.dates_display].filter(Boolean).join(' &nbsp;·&nbsp; ');
+      return `
+      <div class="edu-card">
+        <div class="edu-year">${esc(e.year_label)}</div>
+        <div class="edu-body">
+          <h3>${esc(e.degree)}${e.field ? ' — ' + esc(e.field) : ''}</h3>
+          <p class="inst">${inst}</p>
+          ${e.narrative ? `<p class="note">${esc(e.narrative)}</p>` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  /* ── fetch & render ───────────────────────────────── */
+  fetch('resume.json')
+    .then(r => r.json())
+    .then(data => {
+      renderExperience(data.experience);
+      renderSkills(data.skills);
+      renderEducation(data.education);
+      initFade();
+    })
+    .catch(() => {
+      document.getElementById('timeline').innerHTML =
+        '<p style="color:var(--muted);font-style:italic;padding:1rem 0">Resume data could not be loaded. ' +
+        'Serve this site over HTTP — e.g. <code style="color:var(--accent)">python3 -m http.server 8080</code></p>';
+    });
+</script>
+</body>
+</html>
