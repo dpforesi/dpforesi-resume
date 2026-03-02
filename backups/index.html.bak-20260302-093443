@@ -16,12 +16,12 @@
       --accent:      #f47003;
       --accent-dim:  rgba(244,112,3,0.12);
       --accent-glow: rgba(244,112,3,0.35);
-      --text:        #f4efe5;
-      --muted:       #b5a996;
-      --dim:         #997d64;
+      --text:        #e5d9c1;
+      --muted:       #a09078;
+      --dim:         #7a6450;
       --rule:        #271e10;
       --rule-mid:    #42300f;
-      --prose:       #dacfbb;
+      --prose:       #c8b89a;
     }
 
     /* ─── RESET ──────────────────────────────────────── */
