@@ -395,6 +395,7 @@
   /* ── state ──────────────────────────────────────────── */
   let resumeData = null;
   let currentView = 'main';
+  var muted = false;
   const output = document.getElementById('output');
   const input = document.getElementById('cmd-input');
 
@@ -404,7 +405,7 @@
   bgMusic.volume = 0.08;
   var bgMusicStarted = false;
   function startBgMusic() {
-    if (bgMusicStarted) return;
+    if (bgMusicStarted || muted) return;
     bgMusicStarted = true;
     bgMusic.play().catch(function (e) {
       console.warn('Music play failed:', e.message);
@@ -487,6 +488,7 @@
   }
 
   function beep() {
+    if (muted) return;
     var ctx = getAudio();
     var osc = ctx.createOscillator();
     var gain = ctx.createGain();
@@ -502,6 +504,7 @@
   }
 
   function dataRoll() {
+    if (muted) return;
     var ctx = getAudio();
     var duration = 1.8;
     var steps = 18;
@@ -549,8 +552,9 @@
     print(menuItem('7', 'AI Structured Data (JSON-LD)', 'jsonld'));
     print(menuItem('8', 'Raw JSON', 'json'));
     print('');
+    print(menuItem('9', muted ? 'Unmute Sound' : 'Mute Sound', 'mute'));
     print(menuItem('0', 'Clear Screen', 'clear'));
-    setHint('enter a number (1-8), command name, or "help" for usage');
+    setHint('enter a number (0-9), command name, or "help" for usage');
   }
 
   function showResume() {
@@ -745,6 +749,7 @@
     print('  <span class="highlight">about</span>        about David Foresi');
     print('  <span class="highlight">jsonld</span>       structured data (JSON-LD) in new tab');
     print('  <span class="highlight">json</span>         raw resume JSON in new tab');
+    print('  <span class="highlight">mute</span>         toggle sound on/off');
     print('  <span class="highlight">clear</span>        clear screen');
     print('  <span class="highlight">help</span>         this help text');
     print('');
@@ -785,7 +790,8 @@
   /* ── command router ────────────────────────────────── */
   const commands = {
     '1': 'resume', '2': 'history', '3': 'skills', '4': 'experience',
-    '5': 'education', '6': 'about', '7': 'jsonld', '8': 'json', '0': 'clear'
+    '5': 'education', '6': 'about', '7': 'jsonld', '8': 'json',
+    '9': 'mute', '0': 'clear'
   };
 
   function exec(raw) {
@@ -809,6 +815,13 @@
         var jsonBlob = new Blob([JSON.stringify(resumeData, null, 2)], {type: 'application/json'});
         window.open(URL.createObjectURL(jsonBlob), '_blank');
         print('<span class="system">  opening raw JSON in new tab...</span>');
+        break;
+      case 'mute': case 'unmute':
+        muted = !muted;
+        if (muted && bgMusicStarted) { bgMusic.pause(); }
+        if (!muted && bgMusicStarted) { bgMusic.play().catch(function () {}); }
+        print('<span class="system">  sound ' + (muted ? 'muted' : 'unmuted') + '</span>');
+        if (currentView === 'main') { showMain(); }
         break;
       case 'clear': case 'cls': case 'c': clear(); break;
       case 'help': case 'h': case '?': showHelp(); break;
