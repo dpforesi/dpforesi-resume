@@ -66,7 +66,7 @@
 
     /* ─── TERMINAL CONTAINER ─────────────────────────── */
     .terminal {
-      max-width: 820px;
+      max-width: 960px;
       margin: 0 auto;
       padding: 0 2rem;
       height: 100vh;
@@ -162,6 +162,7 @@
     .terminal-footer {
       flex-shrink: 0;
       padding-bottom: 1rem;
+      padding-bottom: max(1rem, env(safe-area-inset-bottom));
     }
 
     .footer-sep {
@@ -214,10 +215,47 @@
 
     /* ─── RESPONSIVE ─────────────────────────────────── */
     @media (max-width: 600px) {
-      .terminal { padding: 1rem; }
-      .logo { font-size: 1.4rem; }
-      .logo-sub { font-size: 10px; }
-      body { font-size: 13px; }
+      .terminal { padding: 0.75rem; }
+      .logo { font-size: 1.2rem; }
+      .logo-sub { font-size: 9px; }
+      body { font-size: 12px; }
+
+      .prompt-line {
+        margin-top: 0.5rem;
+      }
+
+      .prompt-prefix {
+        font-size: 11px;
+      }
+
+      #cmd-input {
+        font-size: 12px;
+        min-width: 0;
+      }
+
+      .footer-hint {
+        font-size: 10px;
+      }
+
+      .terminal-footer {
+        padding-bottom: 0.5rem;
+      }
+
+      .footer-sep {
+        font-size: 12px;
+      }
+    }
+
+    @media (max-width: 380px) {
+      .prompt-prefix {
+        font-size: 10px;
+      }
+
+      #cmd-input {
+        font-size: 11px;
+      }
+
+      .terminal { padding: 0.5rem; }
     }
   </style>
   <script type="application/ld+json">
@@ -322,9 +360,9 @@
 
     <!-- FOOTER (pinned with prompt) -->
     <div class="terminal-footer">
-      <div class="footer-sep">────────────────────────────────────────────────────────────────</div>
+      <div class="footer-sep" id="footer-sep-top"></div>
       <div class="footer-hint" id="footer-hint">enter a number (1-8), command name, or "help" for usage</div>
-      <div class="footer-sep">────────────────────────────────────────────────────────────────</div>
+      <div class="footer-sep" id="footer-sep-bot"></div>
       <div class="prompt-line" id="prompt-line">
         <span class="prompt-prefix">guest@dpforesi:~$ </span>
         <input type="text" id="cmd-input" autocomplete="off" spellcheck="false" aria-label="Terminal input" />
@@ -343,18 +381,20 @@
   const input = document.getElementById('cmd-input');
 
   /* ── background music ──────────────────────────────── */
-  var bgMusic = null;
+  var bgMusic = new Audio('ambient.m4a');
+  bgMusic.loop = true;
+  bgMusic.volume = 0.08;
   var bgMusicStarted = false;
   function startBgMusic() {
     if (bgMusicStarted) return;
     bgMusicStarted = true;
-    bgMusic = new Audio('ambient.m4a');
-    bgMusic.loop = true;
-    bgMusic.volume = 0.08;
-    bgMusic.play().catch(function () {});
+    bgMusic.play().catch(function (e) {
+      console.warn('Music play failed:', e.message);
+      bgMusicStarted = false;
+    });
   }
-  document.addEventListener('click', startBgMusic, { once: false });
-  document.addEventListener('keydown', startBgMusic, { once: false });
+  document.addEventListener('click', startBgMusic);
+  document.addEventListener('keydown', startBgMusic);
   const cursorBlock = document.getElementById('cursor-block');
 
   /* ── loading + logo animation ────────────────────────── */
@@ -375,8 +415,21 @@
     output.innerHTML = '';
   }
 
+  function getSepWidth() {
+    var el = document.getElementById('output');
+    if (!el) return 64;
+    var style = window.getComputedStyle(el);
+    var fontSize = parseFloat(style.fontSize) || 14;
+    var charW = fontSize * 0.6;
+    return Math.max(20, Math.floor(el.clientWidth / charW));
+  }
+
+  function makeSep() {
+    return '─'.repeat(getSepWidth());
+  }
+
   function printSep() {
-    print('<span class="system">────────────────────────────────────────────────────────────────</span>');
+    print('<span class="system">' + makeSep() + '</span>');
   }
 
   /* roll: captures print calls from a screen function,
@@ -395,7 +448,7 @@
     var origPrint = print;
     var origPrintSep = printSep;
     print = function (html) { buf.push(html); };
-    printSep = function () { buf.push('<span class="system">────────────────────────────────────────────────────────────────</span>'); };
+    printSep = function () { buf.push('<span class="system">' + makeSep() + '</span>'); };
     fn();
     print = origPrint;
     printSep = origPrintSep;
@@ -513,6 +566,7 @@
       print('');
       print('<span class="highlight">  ' + esc(e.title) + '</span>');
       print('<span class="label">  ' + esc(e.organization) + '</span>  <span class="detail">' + esc(e.dates_display) + '  |  ' + esc(e.location) + '</span>');
+      print('');
       wrapText(e.narrative, 4).forEach(l => print(l));
     });
     print('');
@@ -522,6 +576,7 @@
     d.skills.forEach(s => {
       print('');
       print('<span class="highlight">  ' + esc(s.heading) + '</span>');
+      print('');
       wrapText(s.narrative, 4).forEach(l => print(l));
       print('<span class="detail">    tags: ' + s.tags.map(t => esc(t)).join(', ') + '</span>');
     });
@@ -568,6 +623,7 @@
     resumeData.skills.forEach((s, i) => {
       print('');
       print('<span class="highlight">  [' + (i + 1) + ']  ' + esc(s.heading) + '</span>');
+      print('');
       wrapText(s.narrative, 6).forEach(l => print(l));
       print('');
       print('<span class="detail">      tags: ' + s.tags.map(t => esc(t)).join(', ') + '</span>');
@@ -589,6 +645,7 @@
       print('<span class="highlight">  ' + esc(e.title) + '</span>');
       print('<span class="label">  ' + esc(e.organization) + '</span>');
       print('<span class="detail">  ' + esc(e.dates_display) + '  |  ' + esc(e.location) + '</span>');
+      print('');
       wrapText(e.narrative, 4).forEach(l => print(l));
     });
     print('');
@@ -692,7 +749,7 @@
 
   /* ── text wrap helper ──────────────────────────────── */
   function wrapText(text, indent) {
-    const maxWidth = 72;
+    const maxWidth = 90;
     const prefix = ' '.repeat(indent);
     const words = text.split(/\s+/);
     const lines = [];
@@ -786,8 +843,19 @@
   const RESUME_DATA = {"schema":"resume/v1","generated":"2026-02-26","contact":{"name":"David Foresi","locations":[{"city":"Las Vegas","state":"NV","country":"USA"},{"city":"Cabo San Lucas","state":"Baja California Sur","country":"Mexico"}]},"summary":"Self-directed professional spanning real estate, travel, technology, and AI. Defined by curiosity, analytical rigor, and the willingness to build new skills entirely from scratch.","current_roles":["AI Data Annotator & Frontier Model Evaluator (Independent Contractor)","Realtor — Douglas Elliman Real Estate, Las Vegas NV","Realtor — Windermere Real Estate Los Cabos, Cabo San Lucas MX","Franchise Owner — Cruise Planners / American Express Travel"],"experience":[{"title":"AI Data Annotator & Frontier Model Evaluator","organization":"Independent Contractor","employment_type":"contract","location":"Remote","start":"2023","end":"present","current":true,"dates_display":"2023 – Present","narrative":"At the leading edge of his technical journey, David works as an independent contractor in AI data annotation and evaluation — sitting at the precise intersection of his self-taught Python background and his long-standing instinct for quality assurance. His work encompasses coding accuracy assessment, rubric development for complex multi-step evaluation tasks, and the review of agent system instructions for clarity, coherence, and effectiveness. He professionally tests frontier AI models, identifying failure modes, edge cases, and subtle quality distinctions that feed back into training pipelines. It is demanding, nuanced work that rewards both technical fluency and rigorous analytical judgment — and it represents his most direct contribution to the field he is most committed to building expertise in."},{"title":"Realtor","organization":"Douglas Elliman Real Estate","employment_type":"self_employed","location":"Las Vegas, NV","start":"2022-12","end":"present","current":true,"dates_display":"Dec 2022 – Present","narrative":"Under the banner of Douglas Elliman — one of the most recognized luxury real estate brands in the country — David serves buyers and sellers across the Las Vegas market. His data-informed approach to comparative market analysis, pricing strategy, and negotiation has become a defining feature of his practice, drawing on years of experience reading markets and advising clients through complex transactions in one of the most dynamic real estate landscapes in the American West."},{"title":"Realtor","organization":"Windermere Real Estate Los Cabos","employment_type":"self_employed","location":"Cabo San Lucas, Baja California Sur, Mexico","start":"2021-09","end":"present","current":true,"dates_display":"Sep 2021 – Present","narrative":"Since 2021, David has extended his real estate practice to the internationally celebrated resort market of Los Cabos, joining Windermere Real Estate Los Cabos. Operating in a luxury destination market demands not only deep local knowledge but fluency in the cross-border legal and financial complexities of international real estate — a challenge he embraces with the same systematic diligence that has characterized his career across multiple industries and geographies."},{"title":"Franchise Owner & Travel Advisor","organization":"Cruise Planners / American Express Travel","employment_type":"franchise_owner","location":"Virtual","start":"2019-06","end":"present","current":true,"dates_display":"Jun 2019 – Present","narrative":"Since 2019, David has owned and operated a travel agency franchise under the Cruise Planners / American Express Travel umbrella — one of the most respected brands in the travel industry. Running a virtual agency demands entrepreneurial discipline, deep product knowledge across ocean and river cruising, land tours, and luxury resort travel, and the consultative instincts to match discerning clients with exactly the right experience. The agency operates in parallel with his real estate work, a testament to his capacity for managing multiple complex client relationships simultaneously."},{"title":"Realtor","organization":"Corcoran Global Living","employment_type":"self_employed","location":"Lake Las Vegas, NV","start":"2021-09","end":"2023-01","current":false,"dates_display":"Sep 2021 – Jan 2023","narrative":"During the same period he launched his Cabo operations, David also served clients in the distinctive Lake Las Vegas resort community through Corcoran Global Living. Serving two luxury markets simultaneously — one domestic, one international — reflects both his adaptability and his appetite for complexity. Lake Las Vegas, a planned resort enclave east of Henderson, requires a specialist's feel for its unique lifestyle appeal and market dynamics."},{"title":"Real Estate Agent","organization":"Windermere Prestige Properties","employment_type":"self_employed","location":"Lake Las Vegas / Henderson, NV","start":"2019-06","end":"2021-12","current":false,"dates_display":"Jun 2019 – Dec 2021","narrative":"David's tenure at Windermere Prestige Properties marked his arrival in the Lake Las Vegas luxury corridor. Over two and a half years, he built his market expertise and cultivated the client relationships that would anchor the multi-market, multi-brand real estate practice he expanded in subsequent years — a period that sharpened both his transactional skills and his instincts for high-end buyer and seller representation."},{"title":"Realtor","organization":"Signature Gallery of Homes","employment_type":"self_employed","location":"Henderson, NV","start":"2017-01","end":"2019-06","current":false,"dates_display":"Jan 2017 – Jun 2019","narrative":"Before moving into luxury resort markets, David honed his craft at Signature Gallery of Homes in Henderson, representing both new construction and resale properties across the rapidly growing southeast valley. This period deepened his transactional expertise and broadened his understanding of Nevada's residential market across a wider range of price points and buyer profiles — the foundation that made his later luxury work possible."},{"title":"Real Estate Agent","organization":"Coldwell Banker Premier Realty","employment_type":"self_employed","location":"Henderson, NV","start":"2015-03","end":"2017-01","current":false,"dates_display":"Mar 2015 – Jan 2017","narrative":"David launched his real estate career at Coldwell Banker Premier Realty in Henderson — working under one of the industry's most storied brands and developing the transactional and advisory foundations that would carry him through a decade of multi-market practice. Comparative market analysis, client communication, contract management, and negotiation: the core skills built here became the bedrock of everything that followed."},{"title":"Chief Executive Officer","organization":"Qualityspark","employment_type":"founder","location":"Henderson, NV","start":"2014-06","end":"2015-03","current":false,"dates_display":"Jun 2014 – Mar 2015","narrative":"Prior to his real estate career, David founded and led Qualityspark — a formative entrepreneurial chapter that sharpened his instincts for building something from scratch. Running a company, however briefly, leaves a distinctive imprint: a comfort with ambiguity, a bias toward action, and the hard-won understanding of what it truly means to own both the outcome and the process."},{"title":"Continuous Improvement Local Change Agent","organization":"ING","employment_type":"full_time","location":"Windsor, CT","start":"2012-03","end":"2013-03","current":false,"dates_display":"Mar 2012 – Mar 2013","narrative":"Returning to a leadership capacity at ING, David served as a Continuous Improvement Local Change Agent — coaching managers on problem-solving and lean methodology, guiding process improvement projects across the organization, designing visual management boards to surface departmental performance, and delivering daily reporting directly to the office of the CEO. The role demanded equal parts analytical precision and interpersonal skill: translating complex operational data into clear, actionable guidance for managers at every level."},{"title":"Quality Assurance Coordinator","organization":"ING","employment_type":"full_time","location":"Windsor, CT","start":"2006-03","end":"2012-03","current":false,"dates_display":"Mar 2006 – Mar 2012","narrative":"For six years, David served as Quality Assurance Coordinator at ING, where he monitored and audited customer interactions, designed QA evaluation tools and scoring processes, coached front-line customer service representatives, and analyzed interaction data to surface trends, improve training, and inform management decisions. This role established him as someone who could turn raw observational data into systematic organizational improvement — a quiet capability that would underpin every role that followed, including, decades later, his work in AI model evaluation."},{"title":"Customer Service Representative","organization":"ING","employment_type":"full_time","location":"Windsor, CT","start":"2004-03","end":"2006-03","current":false,"dates_display":"Mar 2004 – Mar 2006","narrative":"David's professional journey began on the front lines at ING, handling inbound customer and agent calls, resolving complex financial service issues, processing transactions, and mentoring new hires. It was here that he developed the foundational skills in communication, problem-solving, and customer advocacy that have quietly informed every role since — from QA coordinator to multi-market realtor to AI evaluator."}],"skills":[{"id":"python_ml","heading":"Python & Machine Learning","narrative":"David is a self-taught Python developer whose technical interests center on machine learning, data science, and AI agent systems. Without formal computer science training, he has built his capabilities through disciplined self-study, online coursework, and relentless hands-on practice. His toolkit includes NumPy and pandas for data manipulation, Matplotlib for visualization, scikit-learn for classical ML workflows, and PyTorch for neural network exploration. He brings backend web development skills as well, packaging tools and models into usable interfaces via Jinja-templated applications.","tags":["Python","pandas","NumPy","Matplotlib","scikit-learn","PyTorch","Jinja","Web Backend","Data Science","AI Agents"],"highlighted":["Python","pandas","NumPy","Matplotlib","scikit-learn","PyTorch"]},{"id":"ai_evaluation","heading":"AI Evaluation & Data Annotation","narrative":"Through his independent contractor work, David has developed a specialized skill set in frontier model evaluation. He develops rubrics for assessing complex coding and multi-step reasoning tasks, evaluates agent system instructions for clarity and soundness, and stress-tests model outputs with a calibrated eye for subtle quality distinctions. This work demands both technical literacy and the structured analytical discipline he first cultivated during his years as a quality assurance professional — making it, in retrospect, a role he was preparing for all along.","tags":["Rubric Development","Coding Evaluation","Agent Instruction Review","Frontier Model Testing","Accuracy Assessment"],"highlighted":["Rubric Development","Coding Evaluation","Agent Instruction Review"]},{"id":"real_estate","heading":"Real Estate & Market Analysis","narrative":"With a decade of practice spanning Nevada and Baja California Sur, David brings a data-informed sensibility to real estate that distinguishes his approach in both markets. Skilled in comparative market analysis, pricing strategy, and negotiation, he has guided buyers and sellers through transactions across multiple price points and jurisdictions — navigating Nevada licensing requirements alongside the distinct legal framework governing Mexican real property.","tags":["CMA","Negotiation","Transactions","International RE","Luxury Markets"],"highlighted":["CMA","Negotiation"]},{"id":"qa_process","heading":"Quality Assurance & Process Improvement","narrative":"Nine years at ING left David with a deep foundation in quality assurance, coaching, and lean process improvement. He designed evaluation frameworks, built performance reporting systems, coached teams toward measurable behavior change, and applied continuous improvement methodology at an organizational level. These capabilities have proven foundational to every professional chapter since, threading through his real estate practice, travel business, and AI evaluation work.","tags":["Quality Assurance","Coaching","Process Improvement","Value Stream Mapping","Visual Boards","Reporting","Excel","Salesforce"],"highlighted":["Quality Assurance","Coaching"]}],"education":[{"degree":"Bachelor of Arts","field":"History","institution":"Saint Anselm College","location":"Manchester, NH","start":1995,"graduated":1999,"year_label":"1999","dates_display":"1995 – 1999","narrative":"A foundation in critical thinking, research, and written argument that continues to inform how David approaches complex problems — whether technical, transactional, or analytical."},{"degree":"Self-Directed Technical Education","field":"Python, Machine Learning, Data Science, AI","institution":"Online Coursework & Independent Study","location":null,"start":2020,"end":"present","current":true,"year_label":"∞","dates_display":"Ongoing","narrative":"David's programming journey has been entirely self-directed — built through online courses, official documentation, community resources, and consistent practice. He treats technical learning as a continuous process rather than a credential, measuring progress by what he can build and what problems he can solve."}]};
 
   /* ── boot sequence ─────────────────────────────────── */
+  function updateFooterSeps() {
+    var sep = makeSep();
+    var top = document.getElementById('footer-sep-top');
+    var bot = document.getElementById('footer-sep-bot');
+    if (top) top.textContent = sep;
+    if (bot) bot.textContent = sep;
+  }
+
+  window.addEventListener('resize', updateFooterSeps);
+
   function boot() {
     resumeData = RESUME_DATA;
+    updateFooterSeps();
     showMain();
   }
 
