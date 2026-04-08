@@ -31,6 +31,7 @@
       line-height: 1.6;
       overflow: hidden;
       height: 100vh;
+      height: 100dvh;
     }
 
     /* ─── CRT SCANLINES ──────────────────────────────── */
@@ -70,6 +71,7 @@
       margin: 0 auto;
       padding: 0 2rem;
       height: 100vh;
+      height: 100dvh;
       display: flex;
       flex-direction: column;
       text-shadow: 0 0 6px rgba(244,112,3,0.6), 0 0 20px rgba(244,112,3,0.25), 0 0 40px rgba(244,112,3,0.1);
@@ -197,6 +199,7 @@
       display: flex;
       align-items: center;
       margin-top: 1rem;
+      margin-bottom: 0;
     }
 
     .prompt-prefix {
@@ -378,11 +381,11 @@
       <div class="footer-sep" id="footer-sep-top"></div>
       <div class="footer-hint" id="footer-hint">enter a number (1-8), command name, or "help" for usage</div>
       <div class="footer-sep" id="footer-sep-bot"></div>
-      <div class="prompt-line" id="prompt-line">
+      <form class="prompt-line" id="prompt-line" autocomplete="off">
         <span class="prompt-prefix">guest@dpforesi:~$ </span>
         <input type="text" id="cmd-input" autocomplete="off" spellcheck="false" aria-label="Terminal input" />
         <span class="cursor-block" id="cursor-block"></span>
-      </div>
+      </form>
     </div>
   </div><!-- /main-content -->
 </div>
@@ -395,7 +398,7 @@
   const output = document.getElementById('output');
   const input = document.getElementById('cmd-input');
 
-  /* ── background music ──────────────────────────────── */
+  /* ── background music (starts on first command submit only) ── */
   var bgMusic = new Audio('ambient.m4a');
   bgMusic.loop = true;
   bgMusic.volume = 0.08;
@@ -408,8 +411,6 @@
       bgMusicStarted = false;
     });
   }
-  document.addEventListener('click', startBgMusic);
-  document.addEventListener('keydown', startBgMusic);
   const cursorBlock = document.getElementById('cursor-block');
 
   /* ── loading + logo animation ────────────────────────── */
@@ -818,22 +819,30 @@
   }
 
   /* ── input handling ────────────────────────────────── */
-  input.addEventListener('keydown', function (e) {
-    if (e.key === 'Enter') {
-      const val = input.value.trim();
-      if (val) {
-        beep();
-        print('<span class="dim">guest@dpforesi:~$ ' + esc(val) + '</span>');
-        print('');
-      }
-      exec(val);
-      input.value = '';
+  function submitCommand() {
+    const val = input.value.trim();
+    if (val) {
+      startBgMusic();
+      beep();
+      print('<span class="dim">guest@dpforesi:~$ ' + esc(val) + '</span>');
+      print('');
     }
+    exec(val);
+    input.value = '';
+    input.blur();
+    /* re-focus after brief delay so mobile keyboard dismisses cleanly */
+    setTimeout(function () { input.focus(); }, 50);
+  }
+
+  /* form submit handles both desktop Enter and mobile Go/Return */
+  document.getElementById('prompt-line').addEventListener('submit', function (e) {
+    e.preventDefault();
+    submitCommand();
   });
 
   /* hide native caret, show block cursor */
-  input.addEventListener('focus', () => cursorBlock.style.display = 'inline-block');
-  input.addEventListener('blur', () => cursorBlock.style.display = 'none');
+  input.addEventListener('focus', function () { cursorBlock.style.display = 'inline-block'; });
+  input.addEventListener('blur', function () { cursorBlock.style.display = 'none'; });
 
   /* click anywhere to focus input */
   document.addEventListener('click', function (e) {
@@ -842,6 +851,7 @@
     if (mi) {
       const cmd = mi.dataset.cmd;
       if (cmd) {
+        startBgMusic();
         beep();
         print('<span class="dim">guest@dpforesi:~$ ' + esc(cmd) + '</span>');
         print('');
