@@ -153,9 +153,9 @@
     {
       "id": "python_ml",
       "heading": "Python & Machine Learning",
-      "narrative": "David is a self-taught Python developer whose technical interests center on machine learning, data science, and AI agent systems. Without formal computer science training, he has built his capabilities through disciplined self-study, online coursework, and relentless hands-on practice. His toolkit includes NumPy and pandas for data manipulation, Matplotlib for visualization, scikit-learn for classical ML workflows, and PyTorch for neural network exploration. He brings backend web development skills as well, packaging tools and models into usable interfaces via Jinja-templated applications.",
-      "tags": ["Python", "pandas", "NumPy", "Matplotlib", "scikit-learn", "PyTorch", "Jinja", "Web Backend", "Data Science", "AI Agents"],
-      "highlighted": ["Python", "pandas", "NumPy", "Matplotlib", "scikit-learn", "PyTorch"]
+      "narrative": "David is a self-taught Python developer whose technical interests center on machine learning, data science, analytics, and AI agent systems. Without formal computer science training, he has built his capabilities through disciplined self-study, online coursework, and relentless hands-on practice. His toolkit includes pandas and NumPy for data wrangling and analysis, Matplotlib for visualization, scikit-learn for classical ML workflows, and PyTorch for neural network exploration. He brings backend web development skills as well, packaging tools and models into usable interfaces via Jinja-templated applications.",
+      "tags": ["Python", "pandas", "NumPy", "Data Analysis", "Data Wrangling", "Matplotlib", "scikit-learn", "PyTorch", "Jinja", "Web Backend", "Data Science", "AI Agents"],
+      "highlighted": ["Python", "pandas", "NumPy", "Data Science", "Matplotlib", "scikit-learn"]
     },
     {
       "id": "ai_evaluation",
@@ -167,9 +167,9 @@
     {
       "id": "real_estate",
       "heading": "Real Estate & Market Analysis",
-      "narrative": "With a decade of practice spanning Nevada and Baja California Sur, David brings a data-informed sensibility to real estate that distinguishes his approach in both markets. Skilled in comparative market analysis, pricing strategy, and negotiation, he has guided buyers and sellers through transactions across multiple price points and jurisdictions — navigating Nevada licensing requirements alongside the distinct legal framework governing Mexican real property.",
-      "tags": ["CMA", "Negotiation", "Transactions", "International RE", "Luxury Markets"],
-      "highlighted": ["CMA", "Negotiation"]
+      "narrative": "With a decade of practice spanning Nevada and Baja California Sur, David brings a data science mindset to real estate that distinguishes his approach in both markets. Skilled in comparative market analysis, pricing strategy, market data interpretation, and negotiation, he has guided buyers and sellers through transactions across multiple price points and jurisdictions — navigating Nevada licensing requirements alongside the distinct legal framework governing Mexican real property.",
+      "tags": ["CMA", "Market Analysis", "Market Data", "Pricing Strategy", "Negotiation", "Transactions", "International RE", "Luxury Markets", "Data Science"],
+      "highlighted": ["CMA", "Market Analysis", "Data Science"]
     },
     {
       "id": "qa_process",
