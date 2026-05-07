@@ -360,7 +360,7 @@
     <!-- FOOTER (pinned with prompt) -->
     <div class="terminal-footer">
       <div class="footer-sep" id="footer-sep-top"></div>
-      <div class="footer-hint" id="footer-hint">enter a number (1-8), command name, or "help" for usage</div>
+      <div class="footer-hint" id="footer-hint">enter a letter (A-M), command name, or "help" for usage</div>
       <div class="footer-sep" id="footer-sep-bot"></div>
       <form class="prompt-line" id="prompt-line" autocomplete="off">
         <span class="prompt-prefix">guest@dpforesi:~$ </span>
@@ -540,13 +540,14 @@
     print(menuItem('E', 'Education', 'education'));
     print(menuItem('F', 'About', 'about'));
     print(menuItem('G', 'Sci-Fi Works', 'books'));
-    print(menuItem('H', 'AI Structured Data (JSON-LD)', 'jsonld'));
-    print(menuItem('I', 'Raw Resume JSON', 'json'));
-    print(menuItem('J', 'Contact', 'contact'));
+    print(menuItem('H', 'GitHub Projects', 'projects'));
+    print(menuItem('I', 'AI Structured Data (JSON-LD)', 'jsonld'));
+    print(menuItem('J', 'Raw Resume JSON', 'json'));
+    print(menuItem('K', 'Contact', 'contact'));
     print('');
-    print(menuItem('K', muted ? 'Unmute Sound' : 'Mute Sound', 'mute'));
-    print(menuItem('L', 'Clear Screen', 'clear'));
-    setHint('enter a letter (A-L), command name, or "help" for usage');
+    print(menuItem('L', muted ? 'Unmute Sound' : 'Mute Sound', 'mute'));
+    print(menuItem('M', 'Clear Screen', 'clear'));
+    setHint('enter a letter (A-M), command name, or "help" for usage');
   }
 
   function showResume() {
@@ -733,6 +734,28 @@
     showBackPrompt();
   }
 
+  function showProjects() {
+    currentView = 'projects';
+    clear();
+    printSep();
+    print('<span class="heading">  GITHUB PROJECTS</span>');
+    printSep();
+    print('');
+    print('<span class="highlight">  Blueprint Synth</span>');
+    print('<span class="detail">  A Pure-Python Library for Generating Realistic Synthetic Datasets</span>');
+    print('');
+    wrapText('Blueprint Synth enables developers to create reproducible synthetic data by defining features, population segments, and causal relationships between columns — then generating a pandas DataFrame in a single operation. It supports multiple data types (numeric, boolean, categorical, datetime, text, computed, derived), named population segments with conditional parameter overrides, and causal influences with customizable effect types.', 2).forEach(function (l) { print(l); });
+    print('');
+    wrapText('Key capabilities include topological dependency sorting for multi-hop relationships, deterministic reproducibility via seed control, rich effect specifications (per-unit additive, percentage-based, flat values, custom functions), and row-level noise injection. Output options include direct pandas DataFrame emission, CSV and JSON export, and JSON manifest generation for metadata documentation.', 2).forEach(function (l) { print(l); });
+    print('');
+    print('<span class="detail">  Python 3.10+  |  Dependencies: numpy, pandas</span>');
+    print('');
+    print('  <span class="menu-item" data-cmd="gh-blueprint-synth"><span class="menu-num">[A]</span>  View on GitHub</span>');
+    print('');
+    printSep();
+    showBackPrompt();
+  }
+
   function showHelp() {
     clear();
     printSep();
@@ -747,6 +770,7 @@
     print('  <span class="highlight">education</span>    education background');
     print('  <span class="highlight">about</span>        about David Foresi');
     print('  <span class="highlight">books</span>        sci-fi works');
+    print('  <span class="highlight">projects</span>     github projects');
     print('  <span class="highlight">contact</span>      contact information');
     print('  <span class="highlight">jsonld</span>       structured data (JSON-LD) in new tab');
     print('  <span class="highlight">json</span>         raw resume JSON in new tab');
@@ -754,7 +778,7 @@
     print('  <span class="highlight">clear</span>        clear screen');
     print('  <span class="highlight">help</span>         this help text');
     print('');
-    print('  <span class="detail">you can also enter menu letters (A-L) or click menu items.</span>');
+    print('  <span class="detail">you can also enter menu letters (A-M) or click menu items.</span>');
     print('');
     printSep();
     showBackPrompt();
@@ -913,13 +937,17 @@
   /* ── command router ────────────────────────────────── */
   const mainMenuSelectors = {
     'a': 'resume', 'b': 'history', 'c': 'skills', 'd': 'experience',
-    'e': 'education', 'f': 'about', 'g': 'books', 'h': 'jsonld',
-    'i': 'json', 'j': 'contact', 'k': 'mute', 'l': 'clear'
+    'e': 'education', 'f': 'about', 'g': 'books', 'h': 'projects',
+    'i': 'jsonld', 'j': 'json', 'k': 'contact', 'l': 'mute', 'm': 'clear'
   };
 
   const bookSelectors = {
     'a': 'buybook',
     'b': 'd2d'
+  };
+
+  const projectSelectors = {
+    'a': 'gh-blueprint-synth'
   };
 
   function exec(raw) {
@@ -929,6 +957,8 @@
       cmd = mainMenuSelectors[normalized];
     } else if (currentView === 'books' && bookSelectors[normalized]) {
       cmd = bookSelectors[normalized];
+    } else if (currentView === 'projects' && projectSelectors[normalized]) {
+      cmd = projectSelectors[normalized];
     }
     if (currentView === 'contact' && !contactDecoded && normalized === CONTACT_PLEDGE) {
       decodeContact();
@@ -943,6 +973,7 @@
       case 'education': case 'edu': execWithRoll(cmd, showEducation); break;
       case 'about': case 'a': execWithRoll(cmd, showAbout); break;
       case 'books': case 'book': case 'scifi': case 'sci-fi': execWithRoll(cmd, showBooks); break;
+      case 'projects': case 'project': case 'github': case 'gh': execWithRoll(cmd, showProjects); break;
       case 'contact': case 'con': execWithRoll(cmd, showContact); break;
       case 'buybook':
         window.open('https://www.amazon.com/eom-Expression-Beautiful-Satirical-Adventure-ebook/dp/B0CBW42YZ6', '_blank');
@@ -951,6 +982,10 @@
       case 'd2d':
         window.open('https://books2read.com/u/m26WBo', '_blank');
         print('<span class="system">  opening Draft2Digital listing in new tab...</span>');
+        break;
+      case 'gh-blueprint-synth':
+        window.open('https://github.com/dpforesi/blueprint-synth', '_blank');
+        print('<span class="system">  opening GitHub repository in new tab...</span>');
         break;
       case 'jsonld': case 'ld': case 'ai':
         var ldScript = document.querySelector('script[type="application/ld+json"]');
