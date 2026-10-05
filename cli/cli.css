@@ -13,31 +13,31 @@ body { margin: 0; background: var(--bg); color: var(--fg); font-family: 'Courier
 /* ─── TEXT MODE (#cli) ───────────────────────────── */
 
     #cli {
-      max-width: 80ch;
+      max-width: 120ch;
       margin: 0 auto;
-      padding: 1.5rem 16px 3rem;
+      padding: 1rem 16px 3rem;
       text-shadow: 0 0 6px rgba(244,112,3,0.4);
     }
     #cli h1, #cli h2, #cli h3 { font-size: 1em; font-weight: bold; margin-top: 1.2em; }
-    #cli h1 { text-transform: uppercase; margin-top: 0.5em; }
-    #cli h2 { text-transform: uppercase; }
+    #cli h1, #cli h2 { text-transform: uppercase; margin-top: 0.5em; }
     #cli h2::before { content: '## '; }
     #cli h3::before { content: '> '; }
-    #cli p, #cli ul, #cli pre { margin: 0.5em 0; }
+    #cli p, #cli ul { margin: 0.5em 0; }
     #cli ul { list-style: none; padding-left: 2ch; }
     #cli li::before { content: '* '; }
-    #cli hr { border: 0; border-top: 1px dashed var(--rule); margin: 1.5em 0; opacity: 0.6; }
+    #cli hr { border: 0; border-top: 1px dashed var(--rule); margin: 0.75em 0; opacity: 0.6; }
     #cli a { color: var(--bright); }
     #cli i { font-style: normal; opacity: 0.75; }
-    #cli pre { white-space: pre; overflow-x: auto; }
-    #cli input {
-      background: transparent; color: var(--bright);
-      border: 1px solid var(--fg); font: inherit; padding: 0 0.5ch;
+    #cli .cli-ask { border: 1px dashed var(--fg); padding: 0.5em 1ch; margin-bottom: 1em; }
+    #cli .cli-bar { margin: 0 0 1em; }
+    #cli .cli-echo { opacity: 0.75; margin-top: 0; }
+    #cli .cli-split { width: 100%; border-collapse: collapse; border: 1px solid var(--rule); }
+    #cli .cli-split td { vertical-align: top; padding: 1em 2ch; border: 1px solid var(--rule); }
+    #cli .cli-nav { width: 1%; white-space: nowrap; }
+    #cli .cli-nav-list { position: sticky; top: 1em; line-height: 1.9; }
+    #cli .cli-nav-list b a, #cli .cli-nav-list a { text-decoration: none; }
+    #cli .cli-nav-list a:hover { text-decoration: underline; }
+    @media (max-width: 600px) {
+      #cli .cli-split, #cli .cli-split tbody, #cli .cli-split tr, #cli .cli-split td { display: block; width: auto; }
+      #cli .cli-nav-list { position: static; }
     }
-    #cli .cli-ask { border: 1px dashed var(--fg); padding: 0.5em 1ch; }
-    #cli .cli-echo { opacity: 0.75; }
-    #cli .cli-opts li::before { content: none; }
-    #cli .cli-hint { opacity: 0.6; }
-    #cli #cli-form label { display: flex; white-space: pre; }
-    #cli #cli-input { flex: 1; min-width: 0; border: 0; outline: 0; caret-color: var(--bright); }
-    #cli #cli-out p { white-space: pre-wrap; margin: 0.25em 0; }

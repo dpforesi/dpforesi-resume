@@ -1,7 +1,7 @@
 """Build the text-mode site for CLI browsers (lynx, w3m, links) from RESUME_DATA in index.html.
 
 Writes:
-  - the #cli main-menu screen inside index.html (between the TEXT-MODE markers)
+  - the #cli home screen inside index.html (between the TEXT-MODE markers)
   - one page per menu screen in cli/*.html
   - cli/cli.css, copied from the TEXT MODE styles in index.html
 
@@ -53,27 +53,33 @@ MENU = [
 BOOK = next(x['book'] for x in d['experience'] if 'book' in x)
 
 
-def opts(items):
-    """Lettered options; data-key lets cli.js route a typed letter to the link."""
-    lines = '<br>\n'.join(f'&nbsp;&nbsp;<a data-key="{k}" href="{e(href)}">[{k}]&nbsp;&nbsp;{e(label)}</a>'
-                           for k, href, label in items)
-    return f'<p class="cli-opts">\n{lines}\n</p>'
+def nav(current, base, home):
+    """Persistent left-hand menu; the current screen is marked instead of linked."""
+    lines = [f'<b><a href="{e(home)}">MAIN MENU</a></b>' if current else '<b>MAIN MENU</b>']
+    for k, p, label in MENU:
+        if p == current:
+            lines.append(f'<b>&gt;&nbsp;[{k}]&nbsp;{e(label)}</b>')
+        else:
+            lines.append(f'&nbsp;&nbsp;<a href="{e(base + p)}.html">[{k}]&nbsp;{e(label)}</a>')
+    return '<div class="cli-nav-list">\n' + '<br>\n'.join(lines) + '\n</div>'
 
 
-def screen(cmd, title, body, options, root):
-    menu_href = root + 'index.html?cli'
-    if options is None:
-        options = [('M', menu_href, 'Main menu')]
-    return '\n'.join([
-        f'<p class="cli-echo">guest@dpforesi:~$ {e(cmd)}</p>',
-        '<hr>',
-        f'<h2>{e(title)}</h2>',
-        '<hr>',
-        *([body, '<hr>'] if body else []),
-        opts(options),
-        '<div id="cli-prompt"><p>guest@dpforesi:~$ '
-        '<span class="cli-hint">select an option above (arrow keys or Tab, then Enter)</span></p></div>',
-    ])
+def split(current, base, home, main):
+    """Two-pane layout as a table: w3m draws it side by side, lynx stacks menu above content."""
+    return ('<table class="cli-split" border="1" cellpadding="1" cellspacing="0"><tr>\n'
+            f'<td class="cli-nav" nowrap valign="top">\n{nav(current, base, home)}\n</td>\n'
+            f'<td class="cli-main" valign="top">\n{main}\n</td>\n'
+            '</tr></table>')
+
+
+def bar(home, gui):
+    return (f'<p class="cli-bar"><a href="{e(home)}">DPFORESI</a> :: text-mode terminal — '
+            f'[ <a href="{e(gui)}">launch interactive terminal</a> ]</p>')
+
+
+def screen(cmd, title, body):
+    return '\n'.join([f'<p class="cli-echo">guest@dpforesi:~$ {e(cmd)}</p>', '<hr>',
+                      f'<h2>{e(title)}</h2>', '<hr>', body])
 
 
 def about_html():
@@ -112,12 +118,8 @@ def education_html():
 
 
 def history_html():
-    rows = []
-    for x in d['experience']:
-        rows.append(e(x['dates_display']).ljust(22) + e(x['title']))
-        rows.append(' ' * 22 + e(x['organization']))
-        rows.append('')
-    return '<pre>' + '\n'.join(rows).rstrip() + '</pre>'
+    return '\n'.join(f'<p>{e(x["dates_display"])}<br>&nbsp;&nbsp;{e(x["title"])}<br>'
+                     f'&nbsp;&nbsp;<i>{e(x["organization"])}</i></p>' for x in d['experience'])
 
 
 def resume_html():
@@ -136,14 +138,17 @@ def resume_html():
 def books_html():
     return (f'<h3>{e(BOOK["title"])}</h3>'
             f'<p><i>{e(BOOK["subtitle"])}<br>{BOOK["pages"]:,} pages | Published July 2023 | Kindle Edition</i></p>'
-            f'<p>{e(BOOK_BLURB)}</p>')
+            f'<p>{e(BOOK_BLURB)}</p>'
+            f'<p>[ <a href="{e(BOOK["url"])}">View on Amazon</a> ]&nbsp;&nbsp;'
+            f'[ <a href="{e(BOOK["d2d_url"])}">View on Draft2Digital</a> ]</p>')
 
 
 def projects_html():
     return ('<h3>Blueprint Synth</h3>'
             '<p><i>A Pure-Python Library for Generating Realistic Synthetic Datasets</i></p>'
             + ''.join(f'<p>{e(p)}</p>' for p in BLUEPRINT)
-            + '<p><i>Python 3.10+ | Dependencies: numpy, pandas</i></p>')
+            + '<p><i>Python 3.10+ | Dependencies: numpy, pandas</i></p>'
+            '<p>[ <a href="https://github.com/dpforesi/blueprint-synth">View on GitHub</a> ]</p>')
 
 
 def contact_html():
@@ -154,15 +159,14 @@ def contact_html():
             f'data-phone="{e(json.dumps(c["encoded_phone"]))}">'
             f'<p>EMAIL: {scramble(len(c["encoded_email"]))}</p>'
             f'<p>PHONE: {scramble(len(c["encoded_phone"]))}</p></div>'
-            '<p>This contact information is shared in good faith.<br>'
-            'To reveal it, type the following pledge at the prompt:</p>'
-            '<p>&gt; I will not spam</p>'
-            '<p><i>(the prompt needs JavaScript — in lynx/w3m use the '
-            '<a href="../index.html?gui">interactive terminal</a> in a graphical browser)</i></p>')
+            '<p>This contact information is shared in good faith.</p>'
+            '<p id="cli-pledge"><i>To reveal it, open the <a href="../index.html?gui">interactive terminal</a> '
+            '(needs JavaScript).</i></p>')
 
 
-def page(cmd, title, body, options=None):
-    root = '../'
+def page(name, title, body):
+    home, gui = '../index.html?cli', '../index.html?gui'
+    script = '\n<script src="cli.js"></script>' if name == 'contact' else ''
     return f'''<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -173,17 +177,15 @@ def page(cmd, title, body, options=None):
 </head>
 <body>
 <!-- generated by tools/build_cli.py — edit RESUME_DATA in index.html and rebuild -->
-<div id="cli" data-root="{root}">
-<p class="cli-switch">DPFORESI :: text-mode terminal — [ <a href="{root}index.html?gui">launch interactive terminal</a> ]</p>
-{screen(cmd, title, body, options, root)}
-</div>
-<script src="cli.js"></script>
+<div id="cli">
+{bar(home, gui)}
+{split(name, '', home, screen(name, title, body))}
+</div>{script}
 </body>
 </html>
 '''
 
 
-menu_href = '../index.html?cli'
 PAGES = {
     'resume': page('resume', 'Resume — ' + d['contact']['name'], resume_html()),
     'history': page('history', 'Work History', history_html()),
@@ -191,15 +193,8 @@ PAGES = {
     'experience': page('experience', 'Work Experience', experience_html()),
     'education': page('education', 'Education', education_html()),
     'about': page('about', 'About', about_html()),
-    'books': page('books', 'Sci-Fi Works', books_html(), [
-        ('A', BOOK['url'], 'View on Amazon'),
-        ('B', BOOK['d2d_url'], 'View on Draft2Digital'),
-        ('M', menu_href, 'Main menu'),
-    ]),
-    'projects': page('projects', 'GitHub Projects', projects_html(), [
-        ('A', 'https://github.com/dpforesi/blueprint-synth', 'View on GitHub'),
-        ('M', menu_href, 'Main menu'),
-    ]),
+    'books': page('books', 'Sci-Fi Works', books_html()),
+    'projects': page('projects', 'GitHub Projects', projects_html()),
     'contact': page('contact', 'Contact', contact_html()),
 }
 
@@ -222,18 +217,18 @@ with open(os.path.join(CLI_DIR, 'cli.css'), 'w', encoding='utf-8') as f:
 
 # main menu screen inside index.html
 END_MARKER = '<!-- /TEXT-MODE VERSION -->'
+welcome = '\n'.join([
+    '<p class="cli-echo">guest@dpforesi:~$ whoami</p>', '<hr>',
+    f'<h1>{e(d["contact"]["name"])}</h1>', '<hr>',
+    '<p>Las Vegas, NV / Cabo San Lucas, MX</p>',
+    f'<p>{e(d["summary"])}</p>',
+])
 menu = '\n'.join([
     '<!-- TEXT-MODE VERSION: rendered as-is by lynx/w3m/links and other no-JS browsers.',
     '     Generated by tools/build_cli.py from RESUME_DATA — rebuild if the resume data changes. -->',
-    '<div id="cli" data-root="">',
-    '<pre class="cli-banner">+------------------------------------------------+\n'
-    '|  DPFORESI  ::  text-mode terminal              |\n'
-    '+------------------------------------------------+</pre>',
-    f'<h1>{e(d["contact"]["name"])}</h1>',
-    '<p>Las Vegas, NV / Cabo San Lucas, MX</p>',
-    '<p class="cli-switch">[ <a href="?gui">Launch the interactive terminal</a> ] '
-    '(needs JavaScript + a graphical browser)</p>',
-    screen('menu', 'Main Menu', '', [(k, f'cli/{p}.html', label) for k, p, label in MENU], ''),
+    '<div id="cli">',
+    bar('?cli', '?gui'),
+    split(None, 'cli/', None, welcome),
     '</div>',
 ])
 start = src.index('<!-- TEXT-MODE VERSION')
