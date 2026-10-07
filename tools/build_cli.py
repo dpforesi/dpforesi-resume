@@ -5,6 +5,8 @@ Writes:
   - one page per menu screen in cli/*.html
   - cli/cli.css, copied from the TEXT MODE styles in index.html
 
+Every screen's top bar starts with cli/logo.txt (▰▰▰, made with logo.svg by tools/logo.py) when present.
+
 Run after editing RESUME_DATA or the text-mode styles:  python3 tools/build_cli.py
 """
 import html
@@ -51,6 +53,12 @@ MENU = [
   ('I', 'contact', 'Contact'),
 ]
 BOOK = next(x['book'] for x in d['experience'] if 'book' in x)
+LOGO_TXT = os.path.join(CLI_DIR, 'logo.txt')
+LOGO = open(LOGO_TXT, encoding='utf-8').read().rstrip('\n') if os.path.exists(LOGO_TXT) else None
+if LOGO:
+    from logo import text_rows  # tools/logo.py: each bar keeps its own colour
+    LOGO = '\n'.join(''.join(f'<span style="color:{c}">{e(t, quote=False)}</span>' if c else t
+                             for t, c in row) for row in text_rows())
 
 
 def nav(current, base, home):
@@ -73,7 +81,8 @@ def split(current, base, home, main):
 
 
 def bar(home, gui):
-    return (f'<p class="cli-bar"><a href="{e(home)}">DPFORESI</a> :: text-mode terminal — '
+    logo = f'<span class="cli-logo" role="img" aria-label="DPForesi logo">{LOGO}</span> ' if LOGO else ''
+    return (f'<p class="cli-bar">{logo}<a href="{e(home)}">DPFORESI</a> :: text-mode terminal — '
             f'[ <a href="{e(gui)}">launch interactive terminal</a> ]</p>')
 
 
@@ -173,6 +182,7 @@ def page(name, title, body):
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>dpforesi — {e(title.lower())}</title>
+  <link rel="icon" type="image/svg+xml" href="../logo.svg" />
   <link rel="stylesheet" href="cli.css" />
 </head>
 <body>
