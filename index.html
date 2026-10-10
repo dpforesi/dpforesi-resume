@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content" />
   <title>dpforesi — terminal</title>
   <link rel="icon" type="image/svg+xml" href="logo.svg" />
   <script>
@@ -25,6 +25,9 @@
         else mode = 'gui';
       }
       document.documentElement.setAttribute('data-mode', mode);
+      /* touch screens get tap navigation; the keyboard only opens on request */
+      if (window.matchMedia && matchMedia('(hover: none) and (pointer: coarse)').matches)
+        document.documentElement.classList.add('touch');
     })();
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -370,6 +373,59 @@
       .terminal { padding: 0.5rem; }
     }
 
+    /* ─── TOUCH SCREENS ──────────────────────────────── */
+    /* phones and tablets navigate by tapping; the prompt and keyboard appear only from the ⌨ key */
+    .touch-keys { display: none; }
+    html.touch body { position: fixed; inset: 0; }
+    html.touch body::after { display: none; }   /* crisper text without the scanline overlay */
+    html.touch .terminal { height: var(--app-h, 100dvh); }
+    html.touch .prompt-line { display: none; }
+    html.touch.typing .prompt-line { display: flex; }
+    html.touch #cmd-input, html.touch .cursor-block { font-size: 16px; }   /* 16px keeps iOS from zooming */
+    html.touch .touch-keys { display: flex; gap: 6px; margin-top: 0.5rem; }
+    .touch-key {
+      flex: 1;
+      min-height: 44px;
+      background: transparent;
+      color: var(--fg);
+      border: 1px solid var(--fg);
+      font: bold 11px 'Courier New', Courier, monospace;
+      letter-spacing: 0.05em;
+      text-shadow: inherit;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+    .touch-key.kbd { flex: 0 0 52px; font-size: 18px; }
+    .touch-key:active, .touch-key[aria-pressed="true"] { background: var(--fg); color: var(--bg); text-shadow: none; }
+    html.touch #output .menu-item {
+      display: inline-block;
+      width: calc(100% - 3ch);   /* full-width tap target, leaving room for the line's leading indent */
+      line-height: 44px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    html.touch #output .menu-item:active { background: rgba(244,112,3,0.15); }
+    html.touch .terminal-header, html.touch .logo, html.touch .logo-sub { transition: all 0.2s; }
+    html.touch #main-content.compact .terminal-header { padding-top: 0.5rem; }
+    html.touch #main-content.compact .logo { font-size: 0.9rem; }
+    html.touch #main-content.compact .logo-sub { display: none; }
+
+    /* contact pledge on touch screens: press and hold instead of typing */
+    #output .hold-btn {
+      display: inline-block;
+      margin-left: 2ch;
+      padding: 0.8em 1.5ch;
+      border: 1px solid var(--fg);
+      color: var(--bright);
+      cursor: pointer;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      touch-action: none;
+    }
+    #output .hold-btn.holding { background: rgba(244,112,3,0.15); }
+
     /* ─── TEXT MODE (#cli) ───────────────────────────── */
     html[data-mode="gui"] #cli { display: none; }
     html:not([data-mode="gui"]) .terminal,
@@ -493,6 +549,13 @@
           <span class="cursor-block" id="cursor-block" aria-hidden="true"></span>
         </span>
       </form>
+      <nav class="touch-keys" aria-label="Quick commands">
+        <button type="button" class="touch-key" data-cmd="menu">MENU</button>
+        <button type="button" class="touch-key" data-cmd="resume">RESUME</button>
+        <button type="button" class="touch-key" data-cmd="skills">SKILLS</button>
+        <button type="button" class="touch-key" data-cmd="contact">CONTACT</button>
+        <button type="button" class="touch-key kbd" id="kbd-key" aria-label="Type a command" aria-pressed="false">⌨</button>
+      </nav>
     </div>
   </div><!-- /main-content -->
 </script>
@@ -542,6 +605,48 @@
   /* ── loading + logo animation ────────────────────────── */
   const loader = document.getElementById('loader');
   const mainContent = document.getElementById('main-content');
+
+  /* ── touch screens ─────────────────────────────────── */
+  var TOUCH = document.documentElement.classList.contains('touch');
+
+  /* focus the prompt, except on touch screens where the keyboard opens only from the ⌨ key */
+  function focusPrompt() {
+    if (!TOUCH || document.documentElement.classList.contains('typing')) input.focus();
+  }
+
+  function setTyping(on) {
+    document.documentElement.classList.toggle('typing', on);
+    var key = document.getElementById('kbd-key');
+    if (key) key.setAttribute('aria-pressed', on ? 'true' : 'false');
+    if (on) input.focus(); else input.blur();
+  }
+
+  function buzz() {
+    if (navigator.vibrate) navigator.vibrate(8);
+  }
+
+  /* tapped options type their command into the prompt echo, then run it */
+  var typingTimer = null;
+  function typeAndRun(cmd) {
+    if (typingTimer) return;
+    cancelRoll();
+    startBgMusic();
+    beep();
+    input.value = '';
+    print('<span class="dim">guest@dpforesi:~$ <span class="typed"></span></span>');
+    var typed = output.querySelectorAll('.typed'), el = typed[typed.length - 1], i = 0;
+    typingTimer = setInterval(function () {
+      el.textContent = cmd.slice(0, ++i);
+      if (i < cmd.length) return;
+      clearInterval(typingTimer);
+      typingTimer = null;
+      setTimeout(function () {
+        print('');
+        exec(cmd);
+        focusPrompt();
+      }, 120);
+    }, 35);
+  }
 
   /* ── helpers ────────────────────────────────────────── */
   function esc(s) {
@@ -684,7 +789,7 @@
     print(menuItem('L', muted ? 'Unmute Sound' : 'Mute Sound', 'mute'));
     print(menuItem('M', 'Clear Screen', 'clear'));
     print(menuItem('N', 'Text-Only View (CLI Browsers)', 'cli'));
-    setHint('enter a letter (A-N), command name, or "help" for usage');
+    setHint('enter a letter (A-N), command name, or "help" for usage', 'tap an option, or ⌨ to type a command');
   }
 
   function showResume() {
@@ -923,12 +1028,12 @@
   }
 
   function showBackPrompt() {
-    setHint('type "menu" or "m" to return  |  "help" for commands');
+    setHint('type "menu" or "m" to return  |  "help" for commands', 'tap MENU to return  |  ⌨ to type a command');
   }
 
-  function setHint(text) {
+  function setHint(text, touchText) {
     var el = document.getElementById('footer-hint');
-    if (el) el.textContent = text;
+    if (el) el.textContent = TOUCH && touchText ? touchText : text;
   }
 
   /* ── text wrap helper ──────────────────────────────── */
@@ -1032,13 +1137,19 @@
       printSep();
       print('');
       print('<span class="detail">  This contact information is shared in good faith.</span>');
-      print('<span class="detail">  To reveal it, type the following pledge:</span>');
-      print('');
-      print('  <span class="bright">&gt; I will not spam</span>');
+      if (TOUCH) {
+        print('<span class="detail">  To reveal it, press and hold the pledge:</span>');
+        print('');
+        print('<span class="hold-btn" id="pledge-hold" role="button">I WILL NOT SPAM  <span id="pledge-bar">' + '▱'.repeat(HOLD_STEPS) + '</span></span>');
+      } else {
+        print('<span class="detail">  To reveal it, type the following pledge:</span>');
+        print('');
+        print('  <span class="bright">&gt; I will not spam</span>');
+      }
       print('');
       printSep();
       startScrambleCycle();
-      setHint('type the pledge to decode, or "menu" to return');
+      setHint('type the pledge to decode, or "menu" to return', 'hold the pledge to decode, or tap MENU to return');
     }
   }
 
@@ -1168,9 +1279,9 @@
     exec(val);
     input.value = '';
     placeCursor();
+    if (TOUCH) return;   /* touch: leave the keyboard as the visitor set it */
     input.blur();
-    /* re-focus after brief delay so mobile keyboard dismisses cleanly */
-    setTimeout(function () { input.focus(); }, 50);
+    setTimeout(focusPrompt, 50);
   }
 
   /* form submit handles both desktop Enter and mobile Go/Return */
@@ -1199,25 +1310,73 @@
     if (document.activeElement === input) placeCursor();
   });
 
-  /* click anywhere to focus input */
+  /* clicks: options and keys type their command; elsewhere focuses the prompt (desktop only) */
   document.addEventListener('click', function (e) {
-    /* handle menu item clicks */
-    const mi = e.target.closest('.menu-item');
-    if (mi) {
-      const cmd = mi.dataset.cmd;
-      if (cmd) {
+    if (e.target.closest('#kbd-key')) { setTyping(!document.documentElement.classList.contains('typing')); return; }
+    var t = e.target.closest('[data-cmd]');
+    if (t) {
+      if (TOUCH) { setTyping(false); buzz(); }
+      typeAndRun(t.dataset.cmd);
+      return;
+    }
+    if (e.target.closest('#prompt-line')) { input.focus(); return; }
+    focusPrompt();
+  });
+
+  /* ── touch screens: hold-to-reveal pledge ─────────────── */
+  var HOLD_STEPS = 10, holdTimer = null;
+  function stopHold() {
+    clearInterval(holdTimer);
+    holdTimer = null;
+    var btn = document.getElementById('pledge-hold'), bar = document.getElementById('pledge-bar');
+    if (btn) btn.classList.remove('holding');
+    if (bar) bar.textContent = '▱'.repeat(HOLD_STEPS);
+  }
+  document.addEventListener('pointerdown', function (e) {
+    var btn = e.target.closest('#pledge-hold');
+    if (!btn || holdTimer || contactDecoded) return;
+    e.preventDefault();
+    btn.classList.add('holding');
+    var n = 0;
+    holdTimer = setInterval(function () {
+      var bar = document.getElementById('pledge-bar');
+      n++;
+      if (bar) bar.textContent = '▰'.repeat(n) + '▱'.repeat(HOLD_STEPS - n);
+      buzz();
+      if (n >= HOLD_STEPS) {
+        clearInterval(holdTimer);
+        holdTimer = null;
         startBgMusic();
         beep();
-        print('<span class="dim">guest@dpforesi:~$ ' + esc(cmd) + '</span>');
-        print('');
-        exec(cmd);
-        input.value = '';
-        input.focus();
-        return;
+        decodeContact();
       }
-    }
-    input.focus();
+    }, 120);
   });
+  ['pointerup', 'pointercancel'].forEach(function (ev) {
+    document.addEventListener(ev, function () { if (holdTimer) stopHold(); });
+  });
+
+  /* ── touch screens: fit the visible area when the keyboard opens ── */
+  if (TOUCH && window.visualViewport) {
+    var vv = window.visualViewport, term = document.getElementById('terminal'), lastH = vv.height;
+    var fitViewport = function () {
+      document.documentElement.style.setProperty('--app-h', vv.height + 'px');
+      term.style.transform = vv.offsetTop ? 'translateY(' + vv.offsetTop + 'px)' : '';
+      if (vv.height < lastH - 100) output.scrollTop = output.scrollHeight;   /* keyboard opened: keep the latest output in view */
+      lastH = vv.height;
+    };
+    vv.addEventListener('resize', fitViewport);
+    vv.addEventListener('scroll', fitViewport);
+    fitViewport();
+  }
+
+  /* ── touch screens: shrink the header once the output scrolls ── */
+  if (TOUCH) {
+    output.addEventListener('scroll', function () {
+      if (output.scrollTop > 40) mainContent.classList.add('compact');
+      else if (output.scrollTop < 8) mainContent.classList.remove('compact');
+    });
+  }
 
   /* ── text mode: offer the terminal when detection was unsure ── */
   function initTextMode() {
@@ -1429,7 +1588,7 @@
       spans.forEach(function (span) {
         setTimeout(function () { span.classList.add('revealed'); }, 200);
       });
-      input.focus();
+      focusPrompt();
       boot();
     }, loadTime);
   })();
